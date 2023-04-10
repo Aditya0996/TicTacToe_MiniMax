@@ -16,15 +16,16 @@ def getBoardStrings(gameId):
     conn.request("GET", api, payload, headers)
     res = conn.getresponse()
     data = res.read()
-    jsonInput = json.loads(data.decode("utf-8"))["output"]
+    jsonInput = json.loads(data.decode("utf-8"))
+    jsonInputBoard = jsonInput["output"]
     row = []
-    for x in jsonInput:
+    for x in jsonInputBoard:
         if x != "\n":
             row.append(x)
         else:
             board.append(row)
             row = []
-    return board
+    return {"board": board, "target": int(jsonInput["target"]), "size": len(board[0])}
 
 
 def makeMove(gameId, move):
@@ -87,7 +88,8 @@ def getMoves(gameId, count):
                  headers)
     res = conn.getresponse()
     data = res.read()
-    return json.loads(data.decode("utf-8"))["moves"][0]["moveId"]
+    jsonData = json.loads(data.decode("utf-8"))["moves"][0]
+    return {"moveId": jsonData["moveId"], "x": int(jsonData["moveX"]), "y": int(jsonData["moveY"])}
 
 
 def createGame(team2, size=3, target=3):

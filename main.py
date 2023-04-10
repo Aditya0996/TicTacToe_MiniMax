@@ -1,35 +1,37 @@
-import time
+import numpy as np
 
-from apis import getBoardStrings, makeMove, getMoves, createGame
-from randomMove import random
-
-
-def game(gameId):
-    board = getBoardStrings(gameId)
-    print(board)
-    move = random(board)
-    return makeMove(gameId, move)
+from apis import getBoardStrings, getMoves
+from board import Board
+from game import startGame
+from minimax import minimax
 
 
 def main():
-    flag = True
     team2id = 1362
     gameId = 0
-    if gameId == 0:
-        gameId = createGame(team2id,6,4)
-        print(gameId)
-    while flag:
-        moveMade = game(gameId)
-        if moveMade["code"] == "FAIL":
-            if "Game is no longer open" in moveMade["message"]:
-                print("Game Over")
-                flag = False
-            else:
-                time.sleep(2)
-        else:
-            moveId = moveMade["moveId"]
-            while moveId == getMoves(gameId, 1):
-                time.sleep(2)
+    # startGame(gameId, team2id)
+    # print(getMoves(gameId, 1))
+    # boardString = getBoardStrings(gameId)
+    # board = Board(boardString["size"], boardString["target"])
+    # board.add_symbol((0, 1), 1)
+    # print(board.get_open_spaces())
+    size = 5
+    # board = Board(5, 4)
+    # board.board[1][1] = -1
+    # board.board[2][1] = 1
+    # board.board[1][3] = -1
+    # board.board[2][3] = -1
+    # board.board[2][2] = 1
+    # board.board[3][3] = 1
+    # board.board[1][0] = 1
+    # board.board[1][2] = -1
+    board = Board(3, 3)
+    board.board[0][0] = -1
+    board.board[2][0] = -1
+    board.board[1][1] = 1
+    print(board.board)
+    print(minimax(board, 0, 0, 0))
+
 
 
 if __name__ == "__main__":
