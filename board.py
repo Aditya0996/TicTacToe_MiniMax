@@ -54,30 +54,28 @@ class Board:
             flag = -1
         self.checkCol(point[0], point[1], flag)
         self.checkRow(point[0], point[1], flag)
-        self.checkDiagonalFromTopLeft(point[0], point[1], flag)
-        self.checkDiagonalFromTopRight(point[0], point[1], flag)
+        self.checkDiagonalPositive(point[0], point[1], flag)
+        self.checkDiagonalNegative(point[0], point[1], flag)
 
-    def checkCol(self, x, y, flag):
+    def checkRow(self, x, y, flag):
         i, j = y, y
         while i > -1 and self.board[x][i] == flag:
             i -= 1
         while j < self.dim and self.board[x][j] == flag:
             j += 1
         if j - i - 1 == self.target:
-            winner = self.board[x][y]
             self.gameOver = True
 
-    def checkRow(self, x, y, flag):
+    def checkCol(self, x, y, flag):
         i, j = x, x
         while i > -1 and self.board[i][y] == flag:
             i -= 1
         while j < self.dim and self.board[j][y] == flag:
             j += 1
         if j - i - 1 == self.target:
-            winner = self.board[x][y]
             self.gameOver = True
 
-    def checkDiagonalFromTopLeft(self, x, y, flag):
+    def checkDiagonalPositive(self, x, y, flag):
         ix, jx, iy, jy = x, x, y, y
         while ix > -1 and iy < self.dim and self.board[ix][iy] == flag:
             ix -= 1
@@ -86,10 +84,9 @@ class Board:
             jx += 1
             jy -= 1
         if jx - ix - 1 == self.target:
-            winner = self.board[x][y]
             self.gameOver = True
 
-    def checkDiagonalFromTopRight(self, x, y, flag):
+    def checkDiagonalNegative(self, x, y, flag):
         ix, jx, iy, jy = x, x, y, y
         while ix > -1 and iy > -1 and self.board[ix][iy] == flag:
             ix -= 1
@@ -98,5 +95,4 @@ class Board:
             jx += 1
             jy += 1
         if jx - ix - 1 == self.target:
-            winner = self.board[x][y]
             self.gameOver = True

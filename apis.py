@@ -72,6 +72,7 @@ def makeMove(gameId, move):
     conn.request("POST", "/aip2pgaming/api/index.php", payload, headers)
     res = conn.getresponse()
     data = res.read()
+    print(json.loads(data.decode("utf-8")))
     return json.loads(data.decode("utf-8"))
 
 
@@ -90,6 +91,23 @@ def getMoves(gameId, count):
     data = res.read()
     jsonData = json.loads(data.decode("utf-8"))["moves"][0]
     return {"moveId": jsonData["moveId"], "x": int(jsonData["moveX"]), "y": int(jsonData["moveY"])}
+
+
+def getMoveOpponent(gameId, count):
+    conn = http.client.HTTPSConnection("www.notexponential.com")
+    boundary = ''
+    payload = ''
+    headers = {
+        'x-api-key': constants.xapikey,
+        'userId': constants.userId,
+        'Content-type': 'multipart/form-data; boundary={}'.format(boundary)
+    }
+    conn.request("GET", "/aip2pgaming/api/index.php?type=moves&gameId={}&count={}".format(gameId, count), payload,
+                 headers)
+    res = conn.getresponse()
+    data = res.read()
+    jsonData = json.loads(data.decode("utf-8"))
+    return jsonData["code"]
 
 
 def createGame(team2, size=3, target=3):

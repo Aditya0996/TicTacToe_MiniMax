@@ -1,71 +1,85 @@
+import math
+
 import constants
 
 
-def minimax(board, depth, alpha, beta, point=None, myTurn=True):
-    check = []
+def minimax(board, depth, path, alpha=float("-inf"), beta=float("inf"), point=None, myTurn=True):
     # print("Point ",point," depth ", depth)
     if point is None:
         point = (0, 0)
     if depth == constants.maxDepth or board.isFull() or board.checkWin():  # check win for both returns true false
-        return finalHeuristic(board, point, depth), point
+        return finalHeuristic(board, point, depth, path), point
         # return heuristic(board,point), point
 
     possibleMoves = board.get_open_spaces()
     if myTurn:
+        score = []
+        for x in possibleMoves:
+            score.append((orderHeuristic(1, board, x), x))
+        score.sort(key=lambda a: a[0])
+        possibleMoves = [i for (score, i) in score]
         value = float("-inf")
         for moves in possibleMoves:
             board.add_symbol((moves[0], moves[1]), 1)
-            board.isGameOver(point, myTurn)
-            newValue, newPoint = minimax(board, depth + 1, alpha, beta, moves, not myTurn)
-            check.append((newValue, newPoint))
+            path.append(moves)
+            board.isGameOver(moves, myTurn)
+            newValue, newPoint = minimax(board, depth + 1, path, alpha, beta, moves, not myTurn)
             if newValue > value:
-                value, point = newValue, newPoint
+                # value, point = newValue, newPoint
+                value, point = newValue, moves
+            if value > alpha:
+                alpha = value
             board.remove_symbol((moves[0], moves[1]))
+            if alpha >= beta:
+                break
     else:
+        score = []
+        for x in possibleMoves:
+            score.append((orderHeuristic(-1, board, x), x))
+        score.sort(key=lambda a: a[0])
+        possibleMoves = [i for (score, i) in score]
         value = float("inf")
         for moves in possibleMoves:
             board.add_symbol((moves[0], moves[1]), -1)
-            board.isGameOver(point, myTurn)
-            newValue, newPoint = minimax(board, depth + 1, alpha, beta, moves, not myTurn)
-            check.append((newValue, newPoint))
+            board.isGameOver(moves, myTurn)
+            path.append(moves)
+            newValue, newPoint = minimax(board, depth + 1, path, alpha, beta, moves, not myTurn)
             if newValue < value:
-                value, point = newValue, newPoint
+                # value, point = newValue, newPoint
+                value, point = newValue, moves
+            if value < beta:
+                beta = value
             board.remove_symbol((moves[0], moves[1]))
-            # board.setGameOverFalse()
-    # print(check)
-    print(point, " value: ", value)
+            if alpha >= beta:
+                break
     return value, point
 
 
-def finalHeuristic(board, point, depth):
+def finalHeuristic(board, point, depth, path):
     dimensions = board.getDimensions()
-    score = 0
-    target = board.getTarget()
-
-    # if point[0] - target < 0:
-    #     xStart = 0
-    # else:
-    #     xStart = point[0] - target
-    # if point[1] - target < 0:
-    #     yStart = 0
-    # else:
-    #     yStart = point[1] - target
-    for rowCoord in range(0, dimensions):
-        for colCoord in range(0, dimensions):
-            score += getScore(board, rowCoord, colCoord, target)
-    return score - depth
-
-
-def getScore(board, x, y, step):
-    if board.board[x][y] == 1:
+    if board.board[point[0]][point[1]] == 1:
         turn = 1
     else:
         turn = -1
+    score = 0
+    target = board.getTarget()
+    # pointList = []
+    for rowCoord in range(0, dimensions):
+        for colCoord in range(0, dimensions):
+            score += getScore(board, rowCoord, colCoord, target)
+    # score = getScoreNew(board, point, path)
+    # for moves in path:
+    #     score += getScore(board, moves[0], moves[1], target)
+    if turn == 1:
+        return score - depth
+    else:
+        return score + depth
+
+
+def getScore(board, x, y, step):
     dimensions = board.getDimensions()
     count_player = 0
     count_opponent = 0
-    player = []
-    opponent = []
     score = 0
     rowArray = board.board[x:x + 1, y:(y + step) if y + step < dimensions else dimensions]
     # colArray = board.board[x:(x + step) if x + step < dimensions else dimensions, y:y + 1]
@@ -141,196 +155,164 @@ def getScore(board, x, y, step):
                 count_opponent += 1
                 pdCount -= 1
     if colCount == step or rowCount == step or ndCount == step or pdCount == step:
-        return float("inf")
+        return 1000
     elif colCount == -step or rowCount == -step or ndCount == -step or pdCount == -step:
-        return float("-inf")
+        return -1000
     else:
         return count_player - count_opponent
 
 
-def heuristic(board_obj, coords):
-    target = board_obj.target
-    board = board_obj.board
-    turn = 0
-    # use the coords of the last turn to determine if we are looking for 1 or -1
-    if board[coords[0], coords[1]] == 1:
-        turn = 1
-    elif board[coords[0], coords[1]] == -1:
-        turn = -1
+# def getScoreNew(board, move, path):
+#     score = 0
+#     for moves in path:
+#         x = moves[0]
+#         y = moves[1]
+#         if board.board[x][y] == 1:
+#             score += CheckCol(x, y, board) + CheckRow(x, y, board) + CheckDiagonalFromTopLeft(x, y,
+#                                                                                               board) + CheckDiagonalFromTopRight(
+#                 x, y, board)
+#         else:
+#             score -= CheckCol(x, y, board) + CheckRow(x, y, board) + CheckDiagonalFromTopLeft(x, y,
+#                                                                                               board) + CheckDiagonalFromTopRight(
+#                 x, y, board)
+#     if board.board[move[0]][move[1]] == 1:
+#         return score
+#     else:
+#         return -score
+
+
+def CheckCol(x, y, board):
+    i = j = y
+    if board.board[x][y] == 1:
+        current = 1
+        curOpponent = -1
     else:
-        print("ERROR: Checking for win in unmarked square.")
-        exit()
+        current = -1
+        curOpponent = 1
+    while i > -1 and board.board[x][i] == current:
+        i -= 1
+    while j < board.getDimensions() and board.board[x][j] == current:
+        j += 1
+    continuous = j - i - 1
+    left1 = i
+    right1 = j
+    while i > -1 and board.board[x][i] != curOpponent:
+        i -= 1
+    while j < board.getDimensions() and board.board[x][j] != curOpponent:
+        j += 1
+    if j - right1 + continuous >= board.getTarget() and left1 - i + continuous >= board.getTarget():
+        return 4 ** continuous
+    elif j - i - 1 < board.getTarget():
+        return 0
+    else:
+        return math.pow(4, (continuous - 1))
 
-    max_util = 0
-    multiplier = 0
-    ans = 1
-    # check vert, 1
-    start_space = [coords[0] - (target - 1), coords[1]]
-    for i in range(target):
-        if 0 <= start_space[0] <= coords[0]:
-            temp = 0
-            if (start_space[0] + (target - 1) < len(board)):
-                for j in range(target):
-                    if board[start_space[0] + j, start_space[1]] == ans:
-                        temp += 1
-            if (temp == target and ans == turn):
-                return float('inf')
-            if (ans == turn):
-                temp = 0
-            if (temp > max_util):
-                max_util = temp
-                multiplier = 0
-            elif (temp == max_util):
-                multiplier += 1
-        start_space[0] += 1
 
-    # check horiz, 1
-    start_space = [coords[0], coords[1] - (target - 1)]
-    for i in range(target):
-        if start_space[1] >= 0 and start_space[1] <= coords[1]:
-            temp = 0
-            if (start_space[1] + (target - 1) < len(board)):
-                for j in range(target):
-                    if board[start_space[0], start_space[1] + j] == ans:
-                        temp += 1
-            if (temp == target and ans == turn):
-                return float('inf')
-            if (ans == turn):
-                temp -= 1
-            if (temp > max_util):
-                max_util = temp
-                multiplier = 0
-            elif (temp == max_util):
-                multiplier += 1
-        start_space[1] += 1
+def CheckRow(x, y, board):
+    i = j = x
+    if board.board[x][y] == 1:
+        current = 1
+        curOpponent = -1
+    else:
+        current = -1
+        curOpponent = 1
+    while i > -1 and board.board[i][y] == current:
+        i -= 1
+    while j < board.getDimensions() and board.board[j][y] == current:
+        j += 1
+    continuous = j - i - 1
+    left1 = i
+    right1 = j
+    while i > -1 and board.board[i][y] != curOpponent:
+        i -= 1
+    while j < board.getDimensions() and board.board[j][y] != curOpponent:
+        j += 1
+    if j - right1 + continuous >= board.getTarget() and left1 - i + continuous >= board.getTarget():
+        return 4 ** continuous
+    elif j - i - 1 < board.getTarget():
+        return 0
+    else:
+        return math.pow(4, (continuous - 1))
 
-    # check diag, negative slope, 1
-    start_space = [coords[0] - (target - 1), coords[1] - (target - 1)]
-    for i in range(target):
-        if start_space[0] >= 0 and start_space[0] <= coords[0] and start_space[1] >= 0 and start_space[1] <= coords[
-            1]:
-            temp = 0
-            if (start_space[0] + (target - 1) < len(board) and start_space[1] + (target - 1) < len(board)):
-                for j in range(target):
-                    if board[start_space[0] + j, start_space[1] + j] == ans:
-                        temp += 1
-            if (temp == target and ans == turn):
-                return float('inf')
-            if (ans == turn):
-                temp -= 1
-            if (temp > max_util):
-                max_util = temp
-                multiplier = 0
-            elif (temp == max_util):
-                multiplier += 1
-        start_space[0] += 1
-        start_space[1] += 1
 
-    # check diag, positive slope, 1
-    start_space = [coords[0] + (target - 1), coords[1] - (target - 1)]
-    for i in range(target):
-        if start_space[0] < len(board) and start_space[0] >= coords[0] and start_space[1] >= 0 and start_space[1] <= \
-                coords[1]:
-            temp = 0
-            if (start_space[0] - (target - 1) >= 0 and start_space[1] + (target - 1) < len(board)):
-                for j in range(target):
-                    if board[start_space[0] - j, start_space[1] + j] == ans:
-                        temp += 1
-            if (temp == target and ans == turn):
-                return float('inf')
-            if (ans == turn):
-                temp -= 1
-            if (temp > max_util):
-                max_util = temp
-                multiplier = 0
-            elif (temp == max_util):
-                multiplier += 1
-        start_space[0] -= 1
-        start_space[1] += 1
+def CheckDiagonalFromTopLeft(x, y, board):
+    ix = jx = x
+    iy = jy = y
+    if board.board[x][y] == 1:
+        current = 1
+        curOpponent = -1
+    else:
+        current = -1
+        curOpponent = 1
+    while ix > -1 and iy < board.getDimensions() and board.board[ix][iy] == current:
+        ix -= 1
+        iy += 1
+    while jx < board.getDimensions() and jy > -1 and board.board[jx][jy] == current:
+        jx += 1
+        jy -= 1
+    continuous = jx - ix - 1
+    left1 = ix
+    right1 = jx
+    while ix > -1 and iy < board.getDimensions() and board.board[ix][iy] != curOpponent:
+        ix -= 1
+        iy += 1
+    while jx < board.getDimensions() and jy > -1 and board.board[jx][jy] != curOpponent:
+        jx += 1
+        jy -= 1
+    if jx - right1 + continuous >= board.getTarget() and left1 - ix + continuous >= board.getTarget():
+        return 4 ** continuous
+    elif jx - ix - 1 < board.getTarget():
+        return 0
+    else:
+        return math.pow(4, (continuous - 1))
 
-    ans = -1
-    # check vert, -1
-    start_space = [coords[0] - (target - 1), coords[1]]
-    for i in range(target):
-        if start_space[0] >= 0 and start_space[0] <= coords[0]:
-            temp = 0
-            if (start_space[0] + (target - 1) < len(board)):
-                for j in range(target):
-                    if board[start_space[0] + j, start_space[1]] == ans:
-                        temp += 1
-            if (temp == target and ans == turn):
-                return float('inf')
-            if (ans == turn):
-                temp -= 1
-            if (temp > max_util):
-                max_util = temp
-                multiplier = 0
-            elif (temp == max_util):
-                multiplier += 1
-        start_space[0] += 1
 
-    # check horiz, -1
-    start_space = [coords[0], coords[1] - (target - 1)]
-    for i in range(target):
-        if start_space[1] >= 0 and start_space[1] <= coords[1]:
-            temp = 0
-            if (start_space[1] + (target - 1) < len(board)):
-                for j in range(target):
-                    if board[start_space[0], start_space[1] + j] == ans:
-                        temp += 1
-            if (temp == target and ans == turn):
-                return float('inf')
-            if (ans == turn):
-                temp -= 1
-            if (temp > max_util):
-                max_util = temp
-                multiplier = 0
-            elif (temp == max_util):
-                multiplier += 1
-        start_space[1] += 1
+def CheckDiagonalFromTopRight(x, y, board):
+    ix = jx = x
+    iy = jy = y
+    if board.board[x][y] == 1:
+        current = 1
+        curOpponent = -1
+    else:
+        current = -1
+        curOpponent = 1
+    while ix > -1 and iy > -1 and board.board[ix][iy] == current:
+        ix -= 1
+        iy -= 1
+    while jx < board.getDimensions() and jy < board.getDimensions() and board.board[jx][jy] == current:
+        jx += 1
+        jy += 1
+    continuous = jx - ix - 1
+    left1 = ix
+    right1 = jx
+    while ix > -1 and iy > -1 and board.board[ix][iy] != curOpponent:
+        ix -= 1
+        iy -= 1
+    while jx < board.getDimensions() and jy < board.getDimensions() and board.board[jx][jy] == current:
+        jx += 1
+        jy += 1
+    if jx - right1 + continuous >= board.getTarget() and left1 - ix + continuous >= board.getTarget():
+        return 4 ** continuous
+    elif jx - ix - 1 < board.getTarget():
+        return 0
+    else:
+        return math.pow(4, (continuous - 1))
 
-    # check diag, negative slope, -1
-    start_space = [coords[0] - (target - 1), coords[1] - (target - 1)]
-    for i in range(target):
-        if start_space[0] >= 0 and start_space[0] <= coords[0] and start_space[1] >= 0 and start_space[1] <= coords[
-            1]:
-            temp = 0
-            if (start_space[0] + (target - 1) < len(board) and start_space[1] + (target - 1) < len(board)):
-                for j in range(target):
-                    if board[start_space[0] + j, start_space[1] + j] == ans:
-                        temp += 1
-            if (temp == target and ans == turn):
-                return float('inf')
-            if (ans == turn):
-                temp -= 1
-            if (temp > max_util):
-                max_util = temp
-                multiplier = 0
-            elif (temp == max_util):
-                multiplier += 1
-        start_space[0] += 1
-        start_space[1] += 1
 
-    # check diag, positive slope, -1
-    start_space = [coords[0] + (target - 1), coords[1] - (target - 1)]
-    for i in range(target):
-        if start_space[0] < len(board) and start_space[0] >= coords[0] and start_space[1] >= 0 and start_space[1] <= \
-                coords[1]:
-            temp = 0
-            if start_space[0] - (target - 1) >= 0 and start_space[1] + (target - 1) < len(board):
-                for j in range(target):
-                    if board[start_space[0] - j, start_space[1] + j] == ans:
-                        temp += 1
-            if temp == target and ans == turn:
-                return float('inf')
-            if ans == turn:
-                temp -= 1
-            if temp > max_util:
-                max_util = temp
-                multiplier = 0
-            elif temp == max_util:
-                multiplier += 1
-        start_space[0] -= 1
-        start_space[1] += 1
-
-    return max_util + (multiplier / 20)
+def orderHeuristic(turn, board, point):
+    x = point[0]
+    y = point[1]
+    score = 0
+    board.add_symbol((x, y), turn)
+    board.isGameOver(point, True if turn == 1 else False)
+    if board.checkWin():
+        score += float("inf")
+    else:
+        score += CheckCol(x, y, board) + CheckRow(x, y, board) + CheckDiagonalFromTopLeft(x, y,
+                                                                                          board) + CheckDiagonalFromTopRight(
+            x, y, board)
+    board.remove_symbol((x, y))
+    if turn == 1:
+        return score
+    else:
+        return -score
