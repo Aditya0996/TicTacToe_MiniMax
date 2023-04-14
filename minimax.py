@@ -7,11 +7,13 @@ def minimax(board, depth, path, alpha=float("-inf"), beta=float("inf"), point=No
     # print("Point ",point," depth ", depth)
     if point is None:
         point = (0, 0)
-    if depth == constants.maxDepth or board.isFull() or board.checkWin():  # check win for both returns true false
+    if board.checkWin() or depth == constants.maxDepth or board.isFull():  # check win for both returns true false
+        # print("Max depth", constants.maxDepth)
         return finalHeuristic(board, point, depth, path), point
         # return heuristic(board,point), point
 
-    possibleMoves = board.get_open_spaces()
+    possibleMoves = checkOccupied(board)
+    # possibleMoves = board.get_open_spaces()
     if myTurn:
         score = []
         for x in possibleMoves:
@@ -24,6 +26,7 @@ def minimax(board, depth, path, alpha=float("-inf"), beta=float("inf"), point=No
             path.append(moves)
             board.isGameOver(moves, myTurn)
             newValue, newPoint = minimax(board, depth + 1, path, alpha, beta, moves, not myTurn)
+            board.gameOver = False
             if newValue > value:
                 # value, point = newValue, newPoint
                 value, point = newValue, moves
@@ -44,6 +47,7 @@ def minimax(board, depth, path, alpha=float("-inf"), beta=float("inf"), point=No
             board.isGameOver(moves, myTurn)
             path.append(moves)
             newValue, newPoint = minimax(board, depth + 1, path, alpha, beta, moves, not myTurn)
+            board.gameOver = False
             if newValue < value:
                 # value, point = newValue, newPoint
                 value, point = newValue, moves
@@ -85,7 +89,7 @@ def getScore(board, x, y, step):
     # colArray = board.board[x:(x + step) if x + step < dimensions else dimensions, y:y + 1]
     colArray = []
     i = 0
-    while x + i < dimensions and len(colArray) <= step:
+    while x + i < dimensions and len(colArray) < step:
         colArray.append(board.board[x + i][y])
         i += 1
     negativeDiagonal = []
@@ -154,12 +158,25 @@ def getScore(board, x, y, step):
             elif x == -1:
                 count_opponent += 1
                 pdCount -= 1
+    checkStep = step - 1
     if colCount == step or rowCount == step or ndCount == step or pdCount == step:
         return 1000
     elif colCount == -step or rowCount == -step or ndCount == -step or pdCount == -step:
         return -1000
+    elif colCount == checkStep or rowCount == checkStep or ndCount == checkStep or pdCount == checkStep:
+        return 500
+    elif colCount == -checkStep or rowCount == -checkStep or ndCount == -checkStep or pdCount == -checkStep:
+        return -500
     else:
         return count_player - count_opponent
+    # currentScore = 100
+    # for i in range(1, step+1):
+    #     if colCount == i or rowCount == i or ndCount == i or pdCount == i:
+    #         return currentScore
+    #     elif colCount == -i or rowCount == -i or ndCount == -i or pdCount == -i:
+    #         return -currentScore
+    #     currentScore += 100
+    # return score
 
 
 # def getScoreNew(board, move, path):
@@ -316,3 +333,34 @@ def orderHeuristic(turn, board, point):
         return score
     else:
         return -score
+
+def checkOccupied(board):
+    possibleMoves = board.get_open_spaces()
+    newMoves = []
+    for move in possibleMoves:
+        width = board.getDimensions() - 1;
+        x = move[0]
+        y = move[1]
+        count = 0
+        finalLayer = 3
+        curLayer = finalLayer
+        xL = x - curLayer
+        xU = x + curLayer
+        yL = y - curLayer
+        yU = y + curLayer
+
+        if xL < 0:
+            xL = 0
+        if xU > width:
+            xU = width
+        if yU > width:
+            yU = width
+        if yL < 0:
+            yL = 0
+        for i in range(xL,xU+1):
+            for j in range(yL,yU+1):
+                if board.board[i][j] != 0:
+                    count+=1
+        if count != 0:
+            newMoves.append(move)
+    return newMoves
