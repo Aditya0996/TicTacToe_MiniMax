@@ -18,7 +18,7 @@ def minimax(board, depth, path, alpha=float("-inf"), beta=float("inf"), point=No
         score = []
         for x in possibleMoves:
             score.append((orderHeuristic(1, board, x), x))
-        score.sort(key=lambda a: a[0])
+        score.sort(key=lambda a: a[0], reverse=True)
         possibleMoves = [i for (score, i) in score]
         value = float("-inf")
         for moves in possibleMoves:
@@ -39,7 +39,7 @@ def minimax(board, depth, path, alpha=float("-inf"), beta=float("inf"), point=No
         score = []
         for x in possibleMoves:
             score.append((orderHeuristic(-1, board, x), x))
-        score.sort(key=lambda a: a[0])
+        score.sort(key=lambda a: a[0], reverse=False)
         possibleMoves = [i for (score, i) in score]
         value = float("inf")
         for moves in possibleMoves:
@@ -158,17 +158,22 @@ def getScore(board, x, y, step):
             elif x == -1:
                 count_opponent += 1
                 pdCount -= 1
-    checkStep = step - 1
-    if colCount == step or rowCount == step or ndCount == step or pdCount == step:
-        return 1000
-    elif colCount == -step or rowCount == -step or ndCount == -step or pdCount == -step:
-        return -1000
-    elif colCount == checkStep or rowCount == checkStep or ndCount == checkStep or pdCount == checkStep:
-        return 500
-    elif colCount == -checkStep or rowCount == -checkStep or ndCount == -checkStep or pdCount == -checkStep:
-        return -500
+    if step > 4:
+        checkStep = step - 1
     else:
-        return count_player - count_opponent
+        checkStep = step
+
+    if colCount == step or rowCount == step or ndCount == step or pdCount == step:
+        return 100000
+    elif colCount == -step or rowCount == -step or ndCount == -step or pdCount == -step:
+        return -100000
+    elif colCount == checkStep or rowCount == checkStep or ndCount == checkStep or pdCount == checkStep:
+        return 5000
+    elif colCount == -checkStep or rowCount == -checkStep or ndCount == -checkStep or pdCount == -checkStep:
+        return -5000
+    else:
+        # return count_player - count_opponent
+        return colCount*abs(colCount) + rowCount*abs(rowCount) + ndCount*abs(ndCount) + pdCount*abs(pdCount)
     # currentScore = 100
     # for i in range(1, step+1):
     #     if colCount == i or rowCount == i or ndCount == i or pdCount == i:
@@ -334,6 +339,7 @@ def orderHeuristic(turn, board, point):
     else:
         return -score
 
+
 def checkOccupied(board):
     possibleMoves = board.get_open_spaces()
     newMoves = []
@@ -357,10 +363,10 @@ def checkOccupied(board):
             yU = width
         if yL < 0:
             yL = 0
-        for i in range(xL,xU+1):
-            for j in range(yL,yU+1):
+        for i in range(xL, xU + 1):
+            for j in range(yL, yU + 1):
                 if board.board[i][j] != 0:
-                    count+=1
+                    count += 1
         if count != 0:
             newMoves.append(move)
     return newMoves

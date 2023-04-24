@@ -24,6 +24,7 @@ def startGame(gameId, team2Id, firstMove=False):
             firstMove = False
             board.add_symbol((startx, starty), 1)
             print(board.board)
+            board.showBoard()
             time.sleep(2)
             lastMove = getMoves(gameId, 1)
             moveX, moveY = lastMove["x"], lastMove["y"]
@@ -34,13 +35,15 @@ def startGame(gameId, team2Id, firstMove=False):
             x, y = lastMove["x"], lastMove["y"]
             board.add_symbol((x, y), -1)
             print(board.board)
+            board.showBoard()
     else:
-        while getMoveOpponent(gameId,1) == "FAIL":
+        while getMoveOpponent(gameId, 1) == "FAIL":
             time.sleep(2)
         lastMove = getMoves(gameId, 1)
         x, y = lastMove["x"], lastMove["y"]
         board.add_symbol((x, y), -1)
         print(board.board)
+        board.showBoard()
     while flag:
         moveMade, point = game(gameId, board)
         time.sleep(2)
@@ -51,6 +54,7 @@ def startGame(gameId, team2Id, firstMove=False):
             board.isGameOver(point, 1)
             print("our move:")
             print(board.board)
+            board.showBoard()
             lastMove = getMoves(gameId, 1)
             moveX, moveY = lastMove["x"], lastMove["y"]
             while moveX == point[0] and moveY == point[1]:
@@ -61,6 +65,7 @@ def startGame(gameId, team2Id, firstMove=False):
             board.add_symbol((x, y), -1)
             print("opponent move:")
             print(board.board)
+            board.showBoard()
 
 
 def game(gameId, board):

@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import pyplot
 
 
 class Board:
@@ -11,6 +12,29 @@ class Board:
         self.current = [self.middle, self.middle]
         self.lastPoint = self.current
         self.gameOver = False
+        self.fig, self.ax = pyplot.subplots()
+        self.table = self.ax.table(cellText=self.board, cellLoc='center', cellColours=np.full((size, size), 'white'),
+                         loc='center')
+        self.ax.axis('off')
+
+    def showBoard(self):
+        cell_text = {1: 'O', -1: 'X', 0: ''}
+        cell_colors = {1: 'tab:red', -1: 'tab:blue', 0: 'white'}
+        board_str = [[cell_text[cell] for cell in row] for row in self.board]
+        board_colors = [[cell_colors[cell] for cell in row] for row in self.board]
+        self.ax.table(cellText=board_str, cellLoc='center', cellColours=board_colors, loc='center')
+        pyplot.draw()
+        pyplot.show(block=False)
+        pyplot.pause(1)
+
+    def finalShow(self):
+        cell_text = {1: 'X', -1: 'O', 0: ''}
+        cell_colors = {1: 'tab:red', -1: 'tab:blue', 0: 'white'}
+        board_str = [[cell_text[cell] for cell in row] for row in self.board]
+        board_colors = [[cell_colors[cell] for cell in row] for row in self.board]
+        self.ax.table(cellText=board_str, cellLoc='center', cellColours=board_colors, loc='center')
+        self.ax.axis('off')
+        pyplot.show()
 
     def get_open_spaces(self):
         return np.argwhere(self.board == 0)

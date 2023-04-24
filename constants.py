@@ -1,6 +1,13 @@
 teamId = "1358"
-maxDepth = 6
+maxDepth = 2
 xapikey = '41a435a4fdebc8548aee'
 userId = '1162'
-dimensions = 10
-target = 5
+dimensions = 3
+target = 3
+ericTeam = 1338
+cathyTeam = 1379
+maximeTeam = 1387
+prithviTeam = 1386
+boomTeam = 1364
+zhengyuTeam = 1390
+gyanyu = 1365
